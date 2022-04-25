@@ -2,9 +2,13 @@
 % Please edit documentation in R/brma.R
 \name{brma}
 \alias{brma}
+\alias{brma.formula}
+\alias{brma.default}
 \title{Conduct Bayesian Regularized Meta-Analysis}
 \usage{
-brma(
+brma(x, ...)
+
+\method{brma}{formula}(
   formula,
   data,
   vi = "vi",
@@ -12,17 +16,36 @@ brma(
   method = "hs",
   standardize = TRUE,
   prior = switch(method, lasso = c(df = 1, scale = 1), hs = c(df = 1, df_global = 1,
-    df_slab = 4, scale_global = 1, scale_slab = 1, par_ratio = NULL)),
+    df_slab = 4, scale_global = 1, scale_slab = 1, relevant_pars = NULL)),
   mute_stan = TRUE,
+  ...
+)
+
+\method{brma}{default}(
+  x,
+  y,
+  vi,
+  study = NULL,
+  prior,
+  mute_stan = TRUE,
+  standardize,
+  intercept,
   ...
 )
 }
 \arguments{
+\item{x}{An k x m numeric matrix, where k is the number of effect sizes and m
+is the number of moderators.}
+
+\item{...}{Additional arguments passed on to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.
+Use this, e.g., to override default arguments of that function.}
+
 \item{formula}{An object of class \code{formula} (or one that can be coerced to
 that class), see \code{\link[stats]{lm}}.}
 
-\item{data}{Optional data.frame containing the variables in the model, see
-\code{\link[stats]{lm}}.}
+\item{data}{Either a \code{data.frame} containing the variables in the model,
+see \code{\link[stats]{lm}}, or a \code{list} of multiple imputed \code{data.frame}s,
+or an object returned by \code{\link[mice]{mice}}.}
 
 \item{vi}{Character. Name of the column in the \code{data} that
 contains the variances of the effect sizes. This column will be removed from
@@ -38,8 +61,16 @@ See \code{Details} for more information about analyzing dependent data.}
 Supports one of \code{c("lasso", "hs")}, see Details. Defaults to
 \code{"lasso"}.}
 
-\item{standardize}{Logical, indicating whether or not to standardize the
-predictors (defaults to \code{TRUE}, which is recommended so that shrinking
+\item{standardize}{Either a logical argument or a list. If \code{standardize} is
+logical, it controls whether all predictors are standardized prior to
+analysis or not. Parameter estimates are restored to the predictors' original
+scale. Alternatively, users can provide a list to \code{standardize} to gain
+more control over the standardization process. In this case, it is assumed
+that the standardization has already taken place. This list must have two
+elements: \code{list(center = c(mean(X1) , mean(X2), mean(X...)), scale = c(sd(X1), sd(X2), sd(X...)))}. It is used
+only to restore parameter estimates to the original scale of the predictors.
+This is useful, e.g., to standardize continuous and dichotomous variables
+separately. Defaults to \code{TRUE}, which is recommended so that shrinking
 affects all parameters similarly.}
 
 \item{prior}{Numeric vector, specifying the prior to use. Note that the
@@ -48,8 +79,10 @@ elements.}
 
 \item{mute_stan}{Logical, indicating whether mute all 'Stan' output or not.}
 
-\item{...}{Additional arguments passed on to \code{\link[rstan:stanmodel-method-sampling]{rstan::sampling()}}.
-Use this, e.g., to override default arguments of that function.}
+\item{y}{A numeric vector of k effect sizes.}
+
+\item{intercept}{Logical, indicating whether or not an intercept should be included
+in the model.}
 }
 \value{
 A \code{list} object of class \code{brma}, with the following structure:\preformatted{list(
@@ -66,11 +99,7 @@ A \code{list} object of class \code{brma}, with the following structure:\preform
   tau2         # Numeric, estimated tau2
   R2           # Numeric, estimated heterogeneity explained by the moderators
   k            # Numeric, number of effect sizes
-  vi_column    # Optional, name of the column in the original data
-               # corresponding to vi
   study        # Numeric vector with study id numbers
-  study_column # Optional, name of the column in the original data
-               # corresponding to study
 )
 }
 }
@@ -124,12 +153,11 @@ prior is then strictly no longer a horseshoe. The scale for the Student's t
 prior on the global shrinkage parameter \code{scale_global} defaults to 1
 and can be decreased to achieve more shrinkage. Moreover, if prior
 information regarding the number of relevant moderators is available, it is
-recommended to include this information via the \code{par_ratio} argument
-by setting it to the ratio of the expected number of non-zero coefficients
-to the expected number of zero coefficients. When \code{par_ratio} is
-specified, \code{scale_global} is ignored and instead based on the
-available prior information. Contrary to the horseshoe prior, the
-regularized horseshoe applies additional regularization on large
+recommended to include this information via the \code{relevant_pars}
+argument by setting it to the expected number of relevant moderators. When
+\code{relevant_pars} is specified, \code{scale_global} is ignored and
+instead based on the available prior information. Contrary to the horseshoe
+prior, the regularized horseshoe applies additional regularization on large
 coefficients which is governed by a Student's t prior with a
 \code{scale_slab} defaulting to 2 and \code{df_slab} defaulting to 4.
 This additional regularization ensures at least some shrinkage of large
