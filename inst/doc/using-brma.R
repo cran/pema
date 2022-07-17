@@ -8,11 +8,17 @@ knitr::opts_chunk$set(
 options(digits=2)
 run_everything = FALSE
 
-## ---- eval = TRUE-------------------------------------------------------------
+## ---- eval = FALSE, echo = TRUE-----------------------------------------------
+#  library(pema)
+#  library(tidySEM)
+#  library(ggplot2)
+#  options(mc.cores = 4)
+
+## ---- eval = TRUE, echo = FALSE-----------------------------------------------
 library(pema)
-library(tidySEM)
 library(ggplot2)
 options(mc.cores = 4)
+data("bonapersona")
 
 ## ---- eval = run_everything, echo = FALSE-------------------------------------
 #  descs <- tidySEM::descriptives(bonapersona)[, c("name", "type", "n", "unique", "mean", "sd", "v")]
@@ -45,6 +51,10 @@ descs
 
 ## ---- echo = FALSE, eval = TRUE-----------------------------------------------
 if(run_everything){
+  bonapersona$ageWeek[is.na(bonapersona$ageWeek)] <- median(bonapersona$ageWeek, na.rm = TRUE)
+  datsel <- bonapersona[ , c("yi", "vi", "author", "mTimeLength", "year", "model", "ageWeek", "strainGrouped", "bias", "species", "domain", "sex")]
+  dat2l <- datsel
+  dat2l[["author"]] <- NULL
   fit_lasso <- brma(yi ~ .,
                     data = dat2l,
                     vi = "vi",
