@@ -16,7 +16,7 @@ brma(x, ...)
   method = "hs",
   standardize = TRUE,
   prior = switch(method, lasso = c(df = 1, scale = 1), hs = c(df = 1, df_global = 1,
-    df_slab = 4, scale_global = 1, scale_slab = 1, relevant_pars = NULL)),
+    df_slab = 4, scale_global = 1, scale_slab = 2, relevant_pars = NULL)),
   mute_stan = TRUE,
   ...
 )
@@ -26,9 +26,10 @@ brma(x, ...)
   y,
   vi,
   study = NULL,
+  method = "hs",
+  standardize,
   prior,
   mute_stan = TRUE,
-  standardize,
   intercept,
   ...
 )
@@ -58,8 +59,8 @@ a factor. This column will be removed from the data prior to analysis.
 See \code{Details} for more information about analyzing dependent data.}
 
 \item{method}{Character, indicating the type of regularizing prior to use.
-Supports one of \code{c("lasso", "hs")}, see Details. Defaults to
-\code{"lasso"}.}
+Supports one of \code{c("hs", "lasso")}, see Details. Defaults to
+\code{"hs"}.}
 
 \item{standardize}{Either a logical argument or a list. If \code{standardize} is
 logical, it controls whether all predictors are standardized prior to
@@ -172,9 +173,10 @@ df <- curry[c(1:5, 50:55), c("d", "vi", "sex", "age", "donorcode")]
 suppressWarnings({res <- brma(d~., data = df, iter = 10)})
 }
 \references{
-Van Lissa, C. J., & van Erp, S. (2021, December 9). Select relevant
-moderators using Bayesian regularized meta-regression.
-\doi{10.31234/osf.io/6phs5}
+Van Lissa, C. J., van Erp, S., & Clapper, E. B. (2023). Selecting relevant
+moderators with Bayesian regularized meta-regression. Research Synthesis
+Methods. \doi{10.31234/osf.io/6phs5}
+
 Park, T., & Casella, G. (2008). The Bayesian Lasso. Journal of the American
 Statistical Association, 103(482), 681–686. \doi{10.1198/016214508000000337}
 
